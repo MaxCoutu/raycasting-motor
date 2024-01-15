@@ -23,6 +23,6 @@ class ObjectRenderer:
 
     def load_wall_textures(self):
         return {
-            1: self.get_texture('C:\\Users\\Maxendre\\Downloads\\paul.jpg'),
-            2: self.get_texture('C:\\Users\\Maxendre\\Downloads\\paul2.jpg'),
+            1: self.get_texture('path to image used'),
+            2: self.get_texture('path to image used'),
         }
