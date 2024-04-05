@@ -1,4 +1,3 @@
-
 import random
 import pygame
 
@@ -21,14 +20,14 @@ class Cell_recursive_backtracking:
 
 
 class Maze_recursive_backtracking:
-    def __init__(self, width: int, height: int, visualize: bool):
-        self.width = width
+    def __init__(self, width: int, height: int, visualize: bool, show_end: bool):
+        self.width = width + 5
         self.height = height
-        self.maze_grid = [[Cell_recursive_backtracking(x, y) for y in range(height)] for x in range(width)]
+        self.maze_grid = [[Cell_recursive_backtracking(x, y) for y in range(self.height)] for x in range(self.width)]
         self.stack = []
 
         self.carve_path(visualize)
-        self.draw_maze()
+        if show_end: self.draw_maze()
 
     def to_list(self, save_to_file=False):
         maze_list = [[1 for _ in range(self.width * 2 + 1)] for _ in range(self.height * 2 + 1)]
@@ -41,9 +40,23 @@ class Maze_recursive_backtracking:
                 if not cell.walls["bottom"] and y < self.height - 1:
                     maze_list[y * 2 + 2][x * 2 + 1] = 0
 
-        # remove the left wall of the first cell, and the right wall of the bottom right cell
-        maze_list[1][0] = 0
-        maze_list[-2][-1] = 0
+        # remove cells to make a 3*3 start and end area of the maze
+        # start area
+        for y in range(1, self.height * 2 + 1):
+            for x in range(1, self.width * 2 + 1):
+                if x in range(1, 6) and y in range(1, 6):
+                    maze_list[y][x] = 0
+                elif x in range(1, 6) and y in range(5, 7):
+                    maze_list[y][x] = 1
+
+        # end area
+        for y in range(1, self.height * 2 + 1):
+            for x in range(1, self.width * 2 + 1):
+                if x in range(self.width * 2 - 5, self.width * 2) and y in range(self.height * 2 - 5, self.height * 2):
+                    maze_list[y][x] = 0
+                elif x in range(self.width * 2 - 5, self.width * 2) and y in range(self.height * 2 - 6,
+                                                                                   self.height * 2 - 5):
+                    maze_list[y][x] = 1
 
         if save_to_file:
             with open("maze.txt", "w") as f:
@@ -53,15 +66,6 @@ class Maze_recursive_backtracking:
                     f.write("\n")
 
         return maze_list
-
-    def show_maze(self, maze_list: list):
-        for row in maze_list:
-            for cell in row:
-                if cell == 1:
-                    print("?", end="")
-                else:
-                    print("?", end="")
-            print()
 
     def get_neighbours(self, cell: Cell_recursive_backtracking):
         directions = [("top", (0, -1)), ("right", (1, 0)), ("bottom", (0, 1)), ("left", (-1, 0))]
@@ -113,8 +117,9 @@ class Maze_recursive_backtracking:
             current_cell.x * CELL_SIZE + MARGIN, current_cell.y * CELL_SIZE + MARGIN, CELL_SIZE - 2 * MARGIN,
             CELL_SIZE - 2 * MARGIN))
 
-        pygame.time.wait(int(100 / CPS))
         pygame.display.flip()
+        #pygame.time.wait(int(100 / CPS))
+
 
     def make_complex(self):
         # remove some walls to make the maze more complex
@@ -190,7 +195,17 @@ class Maze_recursive_backtracking:
         self.make_complex()
 
 
-def create_maze(width=WIDTH, height=HEIGHT, visualize=VISUALIZE):
+def show_maze(maze_list: list[list[int]], invert_colors=False):
+    """
+    Display the maze in the terminal as a grid of black and white squares
+    """
+    for row in maze_list:
+        for cell in row:
+            print("⬛", end="") if cell != invert_colors else print("⬜", end="")
+        print()
+
+
+def create_maze(width=WIDTH, height=HEIGHT, visualize=VISUALIZE, show_end=VISUALIZE):
     """
     Create a maze using the recursive backtracking algorithm
     ---------------------------------
@@ -203,17 +218,13 @@ def create_maze(width=WIDTH, height=HEIGHT, visualize=VISUALIZE):
     -visualize : whether to visualize the maze generation process (default: False)
 
     """
-    global maze
-    maze = Maze_recursive_backtracking(width, height, visualize)
+    maze = Maze_recursive_backtracking(width, height, visualize, show_end)
     maze_list = maze.to_list()
-    if visualize:
-        maze.show_maze(maze_list)
+    if visualize or show_end:
         # freeze for 5s
         try:
-            pygame.time.wait(5000)
+            pygame.time.wait(2000)
         except:
             pass
 
     return maze_list
-
-mini_map = create_maze()
